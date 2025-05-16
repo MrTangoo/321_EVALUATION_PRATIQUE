@@ -2,7 +2,7 @@
 # E-Commerce Microservices – Évaluation Module 321
 
 Projet réalisé dans le cadre de l'évaluation pratique du module **321 – Programmer des systèmes distribués**  
-**EPSIC 2024/2025 – Enseignante : Veronica Getaz**
+**EPSIC 2025**
 
 ---
 
@@ -92,14 +92,14 @@ docker service ls
 
 ## [3a] RabbitMQ – Description d'utilisation
 
-- **Pattern utilisé** : **Publish / Subscribe** via un `exchange` de type `fanout`
-- **Service `commandes`** publie un message JSON `{ product, quantity }` à chaque commande
+- **Pattern utilisé** : **Publish / Subscribe** via un exchange de type fanout
+- **Service commandes** publie un message JSON { product, quantity } à chaque commande
 - RabbitMQ permet ici de découpler la logique de traitement (ex: stock, notification) du service principal
-- L'intégration est réalisée via la bibliothèque `amqplib` (Node.js)
+- L'intégration est réalisée via la bibliothèque amqplib (Node.js)
 - Ce message pourrait être consommé par un autre microservice non-couplé (ex : gestion de stock automatisée)
 
 ---
 
 
-## 👥 Équipe projet
+## Équipe projet
 - Maxime Derbigny & Valentin Roth
