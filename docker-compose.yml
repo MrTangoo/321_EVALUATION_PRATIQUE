@@ -1,0 +1,57 @@
+
+version: '3.9'
+services:
+  catalogue:
+    build: ./catalogue
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.catalogue.rule=Host(`catalogue.localhost`)"
+      - "traefik.http.services.catalogue.loadbalancer.server.port=8000"
+    networks:
+      - backend
+
+  commandes:
+    build: ./commandes
+    depends_on:
+      - db
+      - rabbitmq
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.commandes.rule=Host(`commandes.localhost`)"
+      - "traefik.http.services.commandes.loadbalancer.server.port=8001"
+    networks:
+      - backend
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orders
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - backend
+
+  traefik:
+    image: traefik:v2.9
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

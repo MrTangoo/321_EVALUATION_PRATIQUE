@@ -1,0 +1,51 @@
+
+version: '3.9'
+services:
+  catalogue:
+    image: catalogue:latest
+    deploy:
+      replicas: 2
+    networks:
+      - backend
+
+  commandes:
+    image: commandes:latest
+    deploy:
+      replicas: 2
+    networks:
+      - backend
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orders
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    networks:
+      - backend
+
+  traefik:
+    image: traefik:v2.9
+    command:
+      - --api.insecure=true
+      - --providers.docker.swarmmode=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+    networks:
+      - backend
+
+networks:
+  backend:
+    external: false
