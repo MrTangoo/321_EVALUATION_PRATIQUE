@@ -1,129 +1,105 @@
 
-# 🛒 E-Commerce Microservices App
+# E-Commerce Microservices – Évaluation Module 321
 
-Projet de l’évaluation pratique – **Systèmes distribués**  
-EPSIC – 2024/2025 – Veronica Getaz
-
-## 🧩 Microservices
-
-Cette application simule un petit système e-commerce composé de deux microservices :
-
-| Microservice | Description                    | Techno            | Base de données |
-|--------------|--------------------------------|--------------------|------------------|
-| Catalogue    | Gestion des produits           | FastAPI (Python)   | SQLite           |
-| Commandes    | Enregistrement des commandes   | Express (Node.js)  | PostgreSQL       |
-
-Les services communiquent via HTTP REST et utilisent aussi **RabbitMQ** (pattern Publish/Subscribe).
-
-## 🧰 Technologies principales
-
-- **Python 3.11**, **FastAPI**, **SQLite**
-- **Node.js 18**, **Express.js**, **PostgreSQL**
-- **RabbitMQ** (broker de messages)
-- **Docker Compose** (déploiement local)
-- **Docker Swarm** (déploiement distribué)
-- **Traefik v2** (API Gateway + dashboard)
+Projet réalisé dans le cadre de l'évaluation pratique du module **321 – Programmer des systèmes distribués**  
+**EPSIC 2024/2025 – Enseignante : Veronica Getaz**
 
 ---
 
-## 📦 Structure du projet
+## Fonctionnalités en bref
 
-```
-ecommerce-app/
-├── catalogue/         # Microservice catalogue (FastAPI)
-├── commandes/         # Microservice commandes (Express)
-├── traefik/           # Configuration API Gateway (Traefik)
-├── swarm-deploy/      # Fichiers de déploiement Docker Swarm
-├── docker-compose.yml
-├── README.md
-```
+### Application globale
+Cette application e-commerce repose sur une architecture microservices avec API Gateway, messagerie et déploiement Swarm.  
+Chaque service est indépendant, conteneurisé et interagit avec les autres via HTTP ou RabbitMQ.
+
+### Service 1 : `catalogue` (FastAPI)
+- Ajouter des produits avec nom et prix
+- Lister tous les produits
+- Documentation Swagger auto-générée
+- Base de données locale : SQLite
+
+### Service 2 : `commandes` (Express.js)
+- Créer des commandes client (produit, quantité)
+- Liste des commandes passées
+- Utilise PostgreSQL comme base de données
+- Publie chaque commande via RabbitMQ (fanout)
 
 ---
 
-## 🚀 Installation & exécution locale
+## Architecture et technologies utilisées
+
+| Composant      | Technologie          |
+|----------------|----------------------|
+| API Gateway    | Traefik v2           |
+| Microservice 1 | FastAPI (Python) + SQLite |
+| Microservice 2 | Express (Node.js) + PostgreSQL |
+| Messagerie     | RabbitMQ (Pub/Sub)   |
+| Conteneurs     | Docker               |
+| Orchestration  | Docker Compose + Docker Swarm |
+
+---
+
+## Installation & exécution
 
 ### 1. Pré-requis
-- Docker + Docker Compose
-- Fichier hosts mis à jour si nécessaire :
-  ```bash
-  sudo nano /etc/hosts
-  ```
-  Ajouter :
-  ```
-  127.0.0.1 catalogue.localhost
-  127.0.0.1 commandes.localhost
-  ```
+- Docker Desktop 
+- Docker Compose
+- Accès administrateur pour modifier `hosts`
 
-### 2. Lancer les services
+### 2. Modifier le fichier `hosts`
+
+Ouvre `C:\Windows\System32\drivers\etc\hosts` en administrateur et ajoute à la fin :
+
+```
+127.0.0.1 catalogue.localhost
+127.0.0.1 commandes.localhost
+```
+
+### 3. Lancer l'application
 
 ```bash
 docker-compose up --build
 ```
 
----
-
-## 🌐 URLs utiles
-
-| Service        | URL                                    |
-|----------------|----------------------------------------|
-| API catalogue  | http://catalogue.localhost/products |
-| API commandes  | http://commandes.localhost/orders     |
-| Swagger UI     | http://catalogue.localhost/docs         |
-| Traefik UI     | http://localhost:8080                             |
-| RabbitMQ UI    | http://localhost:15672 (user/pass: guest)   |
-
----
-
-## 📨 RabbitMQ – Pattern Pub/Sub
-
-**Objectif :** envoyer un message à chaque commande passée.
-
-- **Publisher** : `commandes` publie chaque commande sur `orderExchange`.
-- **Exchange** : type `fanout` (broadcast).
-- **Consumer (à ajouter)** : autre service ou traitement simulant par ex. la gestion de stock.
-- **Avantage** : découplage fort, scalabilité.
-
-📄 Voir : `commandes/index.js` pour la publication RabbitMQ.
-
----
-
-## ☁️ Déploiement avec Docker Swarm
-
-### 1. Initialiser le Swarm
+### 4. Lancer avec Docker Swarm (objectif 3b)
 
 ```bash
 docker swarm init
-```
-
-### 2. Déployer l'application
-
-```bash
+docker build -t catalogue:latest ./catalogue
+docker build -t commandes:latest ./commandes
 docker stack deploy -c swarm-deploy/docker-stack.yml ecommerce
 ```
 
-### 3. Vérifier les services
+Vérifie le déploiement :
 
 ```bash
 docker service ls
 ```
 
-🖼 Optionnel : utiliser Swarm Visualizer  
-🔍 Vérifier sur [Play with Docker](https://labs.play-with-docker.com/)
+---
+
+## URLs utiles
+
+| Service                | URL                                     |
+|------------------------|------------------------------------------|
+| Swagger – catalogue    | http://catalogue.localhost/docs         |
+| API – catalogue        | http://catalogue.localhost/products     |
+| API – commandes        | http://commandes.localhost/orders       |
+| UI – Traefik Dashboard | http://localhost:8080                   |
+| UI – RabbitMQ          | http://localhost:15672 (user/pass: guest) |
 
 ---
 
-## ✅ Fonctionnalités en bref
+## [3a] RabbitMQ – Description d'utilisation
 
-- Création et affichage de produits (`catalogue`)
-- Création et affichage de commandes (`commandes`)
-- Émission de message à chaque commande (RabbitMQ Pub/Sub)
-- API Gateway via noms de domaine (`Traefik`)
-- Déploiement avec `docker-compose` et `docker swarm`
+- **Pattern utilisé** : **Publish / Subscribe** via un `exchange` de type `fanout`
+- **Service `commandes`** publie un message JSON `{ product, quantity }` à chaque commande
+- RabbitMQ permet ici de découpler la logique de traitement (ex: stock, notification) du service principal
+- L'intégration est réalisée via la bibliothèque `amqplib` (Node.js)
+- Ce message pourrait être consommé par un autre microservice non-couplé (ex : gestion de stock automatisée)
 
 ---
 
-## 👥 Auteurs
 
-- **Ton prénom & nom**
-- Groupe : 2 à 3 personnes
-- EPSIC – Module 321 – Veronica Getaz
+## 👥 Équipe projet
+- Maxime Derbigny & Valentin Roth
